@@ -1,0 +1,82 @@
+
+name: Build and deploy mirror
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Prepare website files
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+
+          DEFAULT_SOURCE="doge_mirror/_sites/doge.hdm1.net"
+          SOURCE=""
+
+          if [ -f "$DEFAULT_SOURCE/index.html" ]; then
+            SOURCE="$DEFAULT_SOURCE"
+          elif [ -d "doge_mirror/_sites" ]; then
+            while IFS= read -r candidate; do
+              if [ -f "$candidate/index.html" ]; then
+                SOURCE="$candidate"
+                break
+              fi
+            done < <(
+              find doge_mirror/_sites \
+                -mindepth 2 -maxdepth 2 \
+                -type f -name index.html \
+                -printf '%h\n' | sort
+            )
+          fi
+
+          if [ -z "$SOURCE" ]; then
+            echo "::error::Could not find index.html under doge_mirror/_sites/"
+            exit 1
+          fi
+
+          echo "Publishing from: $SOURCE"
+          cp -a "$SOURCE/." dist/
+
+          if [ ! -f dist/index.html ]; then
+            echo "::error::dist/index.html is missing"
+            exit 1
+          fi
+
+          echo "Website files prepared successfully."
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
