@@ -1,0 +1,120 @@
+{
+  "start_url": "https://doge.hdm1.net/",
+  "root_host": "doge.hdm1.net",
+  "pages": [
+    {
+      "url": "https://doge.hdm1.net/",
+      "title": "edu-static-5.0.42",
+      "path": "_sites/doge.hdm1.net/index.html",
+      "status": 200,
+      "depth": 0
+    }
+  ],
+  "resources": [
+    {
+      "url": "https://doge.hdm1.net/",
+      "path": "_sites/doge.hdm1.net/index.html",
+      "status": 200,
+      "content_type": "text/html",
+      "bytes": 815
+    },
+    {
+      "url": "https://doge.hdm1.net/chunks/C9Pixl2X.js",
+      "path": "_sites/doge.hdm1.net/chunks/C9Pixl2X.js",
+      "status": 200,
+      "content_type": "text/javascript",
+      "bytes": 6855
+    },
+    {
+      "url": "https://doge.hdm1.net/BewOoRVK.js",
+      "path": "_sites/doge.hdm1.net/BewOoRVK.js",
+      "status": 200,
+      "content_type": "text/javascript",
+      "bytes": 4448
+    },
+    {
+      "url": "https://doge.hdm1.net/chunks/fRWd-__M.js",
+      "path": "_sites/doge.hdm1.net/chunks/fRWd-__M.js",
+      "status": 200,
+      "content_type": "text/javascript",
+      "bytes": 1569
+    },
+    {
+      "url": "https://doge.hdm1.net/chunks/1ndG8YRb.js",
+      "path": "_sites/doge.hdm1.net/chunks/1ndG8YRb.js",
+      "status": 200,
+      "content_type": "text/javascript",
+      "bytes": 9139
+    },
+    {
+      "url": "https://doge.hdm1.net/assets/BuigefS6.css",
+      "path": "_sites/doge.hdm1.net/assets/BuigefS6.css",
+      "status": 200,
+      "content_type": "text/css",
+      "bytes": 46385
+    },
+    {
+      "url": "https://doge.hdm1.net/chunks/CtNt4f3j.js",
+      "path": "_sites/doge.hdm1.net/chunks/CtNt4f3j.js",
+      "status": 200,
+      "content_type": "text/javascript",
+      "bytes": 16046
+    },
+    {
+      "url": "https://doge.hdm1.net/assets/CSNeX4zV.css",
+      "path": "_sites/doge.hdm1.net/assets/CSNeX4zV.css",
+      "status": 200,
+      "content_type": "text/css",
+      "bytes": 36035
+    },
+    {
+      "url": "https://doge.hdm1.net/chunks/pY7-8S-H.js",
+      "path": "_sites/doge.hdm1.net/chunks/pY7-8S-H.js",
+      "status": 200,
+      "content_type": "text/javascript",
+      "bytes": 354254
+    },
+    {
+      "url": "https://doge.hdm1.net/chunks/j5EdpKuI.js",
+      "path": "_sites/doge.hdm1.net/chunks/j5EdpKuI.js",
+      "status": 200,
+      "content_type": "text/javascript",
+      "bytes": 501415
+    },
+    {
+      "url": "https://doge.hdm1.net/assets/Bw0sTaw-.css",
+      "path": "_sites/doge.hdm1.net/assets/Bw0sTaw-.css",
+      "status": 200,
+      "content_type": "text/css",
+      "bytes": 246
+    },
+    {
+      "url": "https://doge.hdm1.net/chunks/CKgnm2J8.js",
+      "path": "_sites/doge.hdm1.net/chunks/CKgnm2J8.js",
+      "status": 200,
+      "content_type": "text/javascript",
+      "bytes": 5022
+    },
+    {
+      "url": "https://doge.hdm1.net/chunks/fXItkwkK.js",
+      "path": "_sites/doge.hdm1.net/chunks/fXItkwkK.js",
+      "status": 200,
+      "content_type": "text/javascript",
+      "bytes": 14518
+    },
+    {
+      "url": "https://doge.hdm1.net/z/b.js",
+      "path": "_sites/doge.hdm1.net/z/b.js",
+      "status": 200,
+      "content_type": "text/javascript",
+      "bytes": 195745
+    }
+  ],
+  "failures": [],
+  "notes": [
+    "This is a best-effort static capture, not a guaranteed complete clone.",
+    "External CDN resources are not downloaded by default.",
+    "API responses, WebSockets, authenticated data, and server-side behavior may not work offline.",
+    "Review copyright, site terms, robots rules, and authorization before publishing a mirror."
+  ]
+}
