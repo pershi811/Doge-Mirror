@@ -30,10 +30,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+
           mkdir -p dist
 
-          SOURCE=""
-
+          # Locate the complete mirrored website.
           if [ -f "doge_mirror/_sites/doge.hdm1.net/index.html" ]; then
             SOURCE="doge_mirror/_sites/doge.hdm1.net"
           elif [ -f "index.html" ]; then
@@ -42,84 +42,38 @@ jobs:
             INDEX="$(find doge_mirror/_sites -type f -name index.html -print -quit)"
             if [ -n "$INDEX" ]; then
               SOURCE="$(dirname "$INDEX")"
+            else
+              echo "::error::No index.html found in doge_mirror/_sites"
+              exit 1
             fi
-          fi
-
-          if [ -z "$SOURCE" ] || [ ! -f "$SOURCE/index.html" ]; then
-            echo "::error::Could not find the website index.html"
-            find . -maxdepth 6 -type f -name index.html -print
+          else
+            echo "::error::Could not find the mirrored website folder."
+            find . -maxdepth 5 -type f -name index.html -print
             exit 1
           fi
 
-          echo "Publishing complete website from: $SOURCE"
+          echo "Publishing website from: $SOURCE"
+
+          # Copy every file, including JavaScript bundles and subfolders.
           cp -a "$SOURCE/." dist/
+
+          # Prevent GitHub Pages from processing the files with Jekyll.
           touch dist/.nojekyll
 
-          python3 <<'PY'
-          from pathlib import Path
-          import re
+          # Verify that the homepage exists.
+          if [ ! -f dist/index.html ]; then
+            echo "::error::dist/index.html is missing"
+            exit 1
+          fi
 
-          root = Path("dist")
-          prefix = "/Doge-Mirror"
+          # Verify the main JavaScript bundle when present in the source.
+          if [ -f "$SOURCE/BewOoRVK.js" ] && [ ! -f dist/BewOoRVK.js ]; then
+            echo "::error::Main JavaScript bundle was not copied"
+            exit 1
+          fi
 
-          # Fix root-relative links in HTML attributes.
-          attrs = re.compile(
-              r'(?P<attr>\b(?:href|src|action|poster|data|cite|background)\s*=\s*)'
-              r'(?P<quote>["\'])(?P<url>.*?)(?P=quote)',
-              re.IGNORECASE
-          )
-
-          def fix_url(url):
-              if not url.startswith("/") or url.startswith("//"):
-                  return url
-              if url == prefix or url.startswith(prefix + "/"):
-                  return url
-              return prefix + url
-
-          for file in root.rglob("*"):
-              if not file.is_file():
-                  continue
-
-              suffix = file.suffix.lower()
-
-              try:
-                  text = file.read_text(encoding="utf-8")
-              except (UnicodeDecodeError, OSError):
-                  continue
-
-              original = text
-
-              if suffix in {".html", ".htm"}:
-                  text = attrs.sub(
-                      lambda m: (
-                          m.group("attr") + m.group("quote")
-                          + fix_url(m.group("url"))
-                          + m.group("quote")
-                      ),
-                      text
-                  )
-
-              if suffix in {".html", ".htm", ".css"}:
-                  text = re.sub(
-                      r'url\((\s*)(["\']?)(/[^)"\']+)\2(\s*)\)',
-                      lambda m: (
-                          "url(" + m.group(1) + m.group(2)
-                          + fix_url(m.group(3)) + m.group(2) + m.group(4) + ")"
-                      ),
-                      text,
-                      flags=re.IGNORECASE
-                  )
-
-              if text != original:
-                  file.write_text(text, encoding="utf-8")
-
-          print("Adjusted common root-relative HTML and CSS links.")
-          PY
-
-          test -f dist/index.html
-
-          echo "Website files ready:"
-          find dist -maxdepth 3 -type f | head -100
+          echo "Files prepared for deployment:"
+          find dist -maxdepth 3 -type f | sort | head -200
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
