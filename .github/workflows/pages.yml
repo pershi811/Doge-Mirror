@@ -12,7 +12,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: pages
+  group: github-pages
   cancel-in-progress: true
 
 jobs:
@@ -30,38 +30,96 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-
           mkdir -p dist
+
+          SOURCE=""
 
           if [ -f "doge_mirror/_sites/doge.hdm1.net/index.html" ]; then
             SOURCE="doge_mirror/_sites/doge.hdm1.net"
-          elif [ -d "doge_mirror/_sites" ]; then
-            SOURCE="$(find doge_mirror/_sites -type f -name index.html -print -quit)"
-            if [ -n "$SOURCE" ]; then
-              SOURCE="${SOURCE%/index.html}"
-            fi
           elif [ -f "index.html" ]; then
             SOURCE="."
-          else
-            SOURCE=""
+          elif [ -d "doge_mirror/_sites" ]; then
+            INDEX="$(find doge_mirror/_sites -type f -name index.html -print -quit)"
+            if [ -n "$INDEX" ]; then
+              SOURCE="$(dirname "$INDEX")"
+            fi
           fi
 
           if [ -z "$SOURCE" ] || [ ! -f "$SOURCE/index.html" ]; then
-            echo "::error::index.html was not found. Check the website folder path."
-            echo "Repository files:"
-            find . -maxdepth 5 -type f -name index.html -print
+            echo "::error::Could not find the website index.html"
+            find . -maxdepth 6 -type f -name index.html -print
             exit 1
           fi
 
-          echo "Publishing from: $SOURCE"
+          echo "Publishing complete website from: $SOURCE"
           cp -a "$SOURCE/." dist/
-          test -f dist/index.html
-
-          # Prevent GitHub Pages from processing the mirrored site with Jekyll.
           touch dist/.nojekyll
 
-          echo "Files prepared for deployment:"
-          find dist -maxdepth 2 -type f | head -50
+          python3 <<'PY'
+          from pathlib import Path
+          import re
+
+          root = Path("dist")
+          prefix = "/Doge-Mirror"
+
+          # Fix root-relative links in HTML attributes.
+          attrs = re.compile(
+              r'(?P<attr>\b(?:href|src|action|poster|data|cite|background)\s*=\s*)'
+              r'(?P<quote>["\'])(?P<url>.*?)(?P=quote)',
+              re.IGNORECASE
+          )
+
+          def fix_url(url):
+              if not url.startswith("/") or url.startswith("//"):
+                  return url
+              if url == prefix or url.startswith(prefix + "/"):
+                  return url
+              return prefix + url
+
+          for file in root.rglob("*"):
+              if not file.is_file():
+                  continue
+
+              suffix = file.suffix.lower()
+
+              try:
+                  text = file.read_text(encoding="utf-8")
+              except (UnicodeDecodeError, OSError):
+                  continue
+
+              original = text
+
+              if suffix in {".html", ".htm"}:
+                  text = attrs.sub(
+                      lambda m: (
+                          m.group("attr") + m.group("quote")
+                          + fix_url(m.group("url"))
+                          + m.group("quote")
+                      ),
+                      text
+                  )
+
+              if suffix in {".html", ".htm", ".css"}:
+                  text = re.sub(
+                      r'url\((\s*)(["\']?)(/[^)"\']+)\2(\s*)\)',
+                      lambda m: (
+                          "url(" + m.group(1) + m.group(2)
+                          + fix_url(m.group(3)) + m.group(2) + m.group(4) + ")"
+                      ),
+                      text,
+                      flags=re.IGNORECASE
+                  )
+
+              if text != original:
+                  file.write_text(text, encoding="utf-8")
+
+          print("Adjusted common root-relative HTML and CSS links.")
+          PY
+
+          test -f dist/index.html
+
+          echo "Website files ready:"
+          find dist -maxdepth 3 -type f | head -100
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
@@ -77,6 +135,6 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
-      - name: Deploy to GitHub Pages
+      - name: Deploy website
         id: deployment
         uses: actions/deploy-pages@v4
