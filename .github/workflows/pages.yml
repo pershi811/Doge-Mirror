@@ -1,7 +1,6 @@
-```yaml
 name: Deploy Doge Mirror to GitHub Pages
 
-on:
+'on':
   push:
     branches:
       - main
@@ -19,84 +18,50 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Configure GitHub Pages
+      - name: Configure Pages
         uses: actions/configure-pages@v5
 
-      - name: Find and prepare website
+      - name: Prepare website
         shell: bash
         run: |
           set -euo pipefail
-
           mkdir -p dist
           SOURCE=""
 
-          # Check the expected website location first.
-          DEFAULT_SOURCE="doge_mirror/_sites/doge.hdm1.net"
-
-          if [ -f "$DEFAULT_SOURCE/index.html" ]; then
-            SOURCE="$DEFAULT_SOURCE"
-          fi
-
-          # If the default location does not exist, search for index.html.
-          if [ -z "$SOURCE" ] && [ -d "doge_mirror/_sites" ]; then
-            while IFS= read -r -d '' FILE; do
-              SOURCE="$(dirname "$FILE")"
-              break
-            done < <(
-              find doge_mirror/_sites \
-                -type f \
-                -name index.html \
-                -print0
-            )
-          fi
-
-          # Also support a website uploaded directly to the repository root.
-          if [ -z "$SOURCE" ] && [ -f "index.html" ]; then
+          if [ -f "doge_mirror/_sites/doge.hdm1.net/index.html" ]; then
+            SOURCE="doge_mirror/_sites/doge.hdm1.net"
+          elif [ -d "doge_mirror/_sites" ]; then
+            SOURCE="$(find doge_mirror/_sites -type f -name index.html -print -quit | xargs -r dirname)"
+          elif [ -f "index.html" ]; then
             SOURCE="."
           fi
 
-          # Stop with a clear error if the website cannot be found.
-          if [ -z "$SOURCE" ]; then
-            echo "::error::Could not find index.html."
-            echo "Expected doge_mirror/_sites/doge.hdm1.net/index.html"
-            echo "or another index.html under doge_mirror/_sites/."
+          if [ -z "$SOURCE" ] || [ ! -f "$SOURCE/index.html" ]; then
+            echo "::error::Could not find the website's index.html file."
+            echo "Check the location of your website files in the repository."
             exit 1
           fi
 
           echo "Publishing website from: $SOURCE"
-
-          # Copy the complete website, including hidden files.
           cp -a "$SOURCE/." dist/
+          test -f dist/index.html
 
-          # Verify the published root contains index.html.
-          if [ ! -f "dist/index.html" ]; then
-            echo "::error::dist/index.html was not created."
-            exit 1
-          fi
-
-          echo "Website ready for deployment:"
-          find dist -maxdepth 2 -type f | head -50
-
-      - name: Upload website artifact
+      - name: Upload website
         uses: actions/upload-pages-artifact@v3
         with:
           path: dist
 
   deploy:
-    runs-on: ubuntu-latest
     needs: build
-
+    runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-
     steps:
       - name: Deploy website
         id: deployment
         uses: actions/deploy-pages@v4
-```
